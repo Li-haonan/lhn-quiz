@@ -21,7 +21,7 @@ function loadFetchHandler() {
       match: vi.fn(),
     },
     self: {
-      registration: { scope: 'https://example.com/dlut-nihongo-quiz/' },
+      registration: { scope: 'https://example.com/lhn-quiz/' },
       location: { origin: 'https://example.com' },
       addEventListener: vi.fn((name: string, handler: (event: FetchEvent) => void) => {
         if (name === 'fetch') fetchHandler = handler
@@ -58,8 +58,8 @@ describe('mobile Service Worker refresh behavior', () => {
     fetchMock.mockResolvedValue({ ok: false, type: 'basic' })
     cacheMatchMock.mockResolvedValue(undefined)
 
-    await dispatch(fetchHandler, '/dlut-nihongo-quiz/', 'document')
-    await dispatch(fetchHandler, '/dlut-nihongo-quiz/assets/index-old.js', 'script')
+    await dispatch(fetchHandler, '/lhn-quiz/', 'document')
+    await dispatch(fetchHandler, '/lhn-quiz/assets/index-old.js', 'script')
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -78,9 +78,9 @@ describe('mobile Service Worker refresh behavior', () => {
     const cachedBank = { source: 'cache' }
     cacheMatchMock.mockResolvedValue(cachedBank)
 
-    await expect(
-      dispatch(fetchHandler, '/dlut-nihongo-quiz/power-ai-question-bank.json', ''),
-    ).resolves.toBe(cachedBank)
+    await expect(dispatch(fetchHandler, '/lhn-quiz/power-ai-question-bank.json', '')).resolves.toBe(
+      cachedBank,
+    )
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })

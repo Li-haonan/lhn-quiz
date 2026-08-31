@@ -57,16 +57,16 @@
 ## 5. PWA 配置更新
 
 更新 `manifest.json`：
-- `start_url` - 改为绝对路径 `/dlut-nihongo-quiz/`
-- `scope` - 改为绝对路径 `/dlut-nihongo-quiz/`
+- `start_url` - 使用相对路径 `./`，自动适应仓库名
+- `scope` - 使用相对路径 `./`，自动适应仓库名
 
 ## 技术说明
 
 ### GitHub Pages SPA 重定向原理
 
-1. 用户访问 `example.com/dlut-nihongo-quiz/home`
+1. 用户访问 `example.com/lhn-quiz/home`
 2. GitHub Pages 返回 404.html（因为该路径不存在实际文件）
-3. 404.html 中的脚本将 URL 重写为 `example.com/dlut-nihongo-quiz/?/home`
+3. 404.html 中的脚本将 URL 重写为 `example.com/lhn-quiz/?/home`
 4. 重定向到 index.html
 5. index.html 中的脚本解析参数，恢复真实 URL
 6. Vue Router 接管路由

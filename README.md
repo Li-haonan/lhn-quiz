@@ -47,7 +47,7 @@
 
 ```bash
 git clone <你的仓库地址>
-cd dlut-nihongo-quiz
+cd lhn-quiz
 npm install
 npm run dev
 ```
