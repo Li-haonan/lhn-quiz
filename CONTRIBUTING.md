@@ -1,10 +1,10 @@
 # 贡献指南
 
-感谢你对 DLUT 多学科复习题库（dlut-nihongo-quiz）的兴趣！本文档介绍如何参与贡献。
+感谢你对个人知识题库的兴趣！这是一个本地优先、持续扩展的个人学习与复习平台，本文档介绍如何参与贡献。
 
 ## 🐛 报告 Bug / 提建议
 
-请通过 [GitHub Issues](https://github.com/tianxingleo/dlut-nihongo-quiz/issues/new/choose) 提交。
+请通过当前仓库的 GitHub Issues 提交。
 
 提交前请：
 
@@ -16,7 +16,7 @@
 
 题库的 single source of truth 是 `data/raw/` 下的 Markdown 文件。**永远不要直接编辑 `public/*.json`** —— 它们是 parser 生成的。
 
-本项目支持 4 个学科，每个学科有自己的源目录和 parser：
+仓库保留了多个学科的题库源文件和 parser；应用当前开放的分类以 `src/config/categories.ts` 为准：
 
 | 学科         | 源 md                                                                                                           | Parser 命令               |
 | ------------ | --------------------------------------------------------------------------------------------------------------- | ------------------------- |
@@ -24,6 +24,7 @@
 | 中国近现代史 | `data/raw/history/*.md`                                                                                         | `npm run parse:history`   |
 | 党史         | `data/raw/party/*.md`                                                                                           | `npm run parse:party`     |
 | 军事理论     | `data/raw/military/*.md`                                                                                        | `npm run parse:military`  |
+| 电力人工智能 | `data/raw/power-ai-question-bank-dlut-quality-cleaned.md`                                                       | `npm run parse:power-ai`  |
 
 完整流程（单选 / 多选 / 判断三种题型的 Markdown 格式、验证报告、新增学科的步骤、跨文件去重说明）在 **[docs/question-bank.md](docs/question-bank.md)**。
 
