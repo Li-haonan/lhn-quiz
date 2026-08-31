@@ -8,13 +8,7 @@ import { useToast } from '../composables/useToast'
 import { useSettings } from '../composables/useSettings'
 import { useAI } from '../composables/useAI'
 import { AI_DEFAULTS } from '../types/ai'
-import { parseSyncCode, type SyncSummary } from '../services/syncCode'
-import {
-  createProgressCode,
-  normalizeProgressCode,
-  parseProgressCode,
-  PROGRESS_CODE_PREFIX,
-} from '../services/progressCode'
+import { createProgressCode, parseProgressCode, type SyncSummary } from '../services/progressCode'
 import type { Category } from '../types/question'
 import type { AIConfig } from '../types/ai'
 
@@ -143,12 +137,7 @@ async function inspectSyncCode() {
   }
   syncing.value = true
   try {
-    const pastedCode = normalizeProgressCode(syncCodeInput.value)
-    const isProgressCode =
-      pastedCode.startsWith(PROGRESS_CODE_PREFIX) || pastedCode.startsWith('DLUTPROG:')
-    const result = isProgressCode
-      ? parseProgressCode(syncCodeInput.value)
-      : await parseSyncCode(syncCodeInput.value)
+    const result = parseProgressCode(syncCodeInput.value)
     decodedSyncJson.value = result.json
     syncSummary.value = result.summary
   } catch (error) {

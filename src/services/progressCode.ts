@@ -1,7 +1,4 @@
-import type { SyncSummary } from './syncCode'
-
 export const PROGRESS_CODE_PREFIX = 'DLUTSYNC3:'
-const LEGACY_PROGRESS_CODE_PREFIX = 'DLUTPROG:'
 export const MAX_PROGRESS_CODE_LENGTH = 1000
 
 const GROUPS = [
@@ -10,7 +7,6 @@ const GROUPS = [
   { prefix: 'power-ai-judge-q', count: 286 },
 ] as const
 const QUESTION_COUNT = GROUPS.reduce((sum, group) => sum + group.count, 0)
-const LEGACY_BITS_PER_QUESTION = 6
 const BITS_PER_QUESTION = 4
 const INDEX_BITS = 10
 const HEADER_BYTES = 4
@@ -21,6 +17,16 @@ type BackupData = {
   exportedAt?: string
   questionStats: Array<Record<string, unknown>>
   settings: Array<Record<string, unknown>>
+}
+
+export interface SyncSummary {
+  exportedAt: string
+  attempts: number
+  learnedQuestions: number
+  wrongQuestions: number
+  bookmarks: number
+  tagStats: number
+  sessions: number
 }
 
 function parseBackup(json: string): BackupData {
@@ -136,11 +142,15 @@ function fromBase64Url(value: string): Uint8Array {
  * validating the URL-safe payload.
  */
 export function normalizeProgressCode(code: string): string {
-  return code
-    .trim()
-    .replace(/^["'“”‘’]+|["'“”‘’]+$/g, '')
-    .replace(/[\s\u200B-\u200D\u2060\uFEFF]/g, '')
-    .replace(/：/g, ':')
+  return (
+    code
+      .trim()
+      .replace(/^["'“”‘’]+|["'“”‘’]+$/g, '')
+      // \p{Cf} also covers bidi marks/isolate characters added by some mobile
+      // messaging apps, not only the common zero-width characters listed before.
+      .replace(/[\s\p{Cf}]/gu, '')
+      .replace(/：/g, ':')
+  )
 }
 
 /**
@@ -202,79 +212,16 @@ export function createProgressCode(backupJson: string): string {
 
 export function parseProgressCode(code: string): { json: string; summary: SyncSummary } {
   const normalized = normalizeProgressCode(code)
-  const isCurrentVersion = normalized.startsWith(PROGRESS_CODE_PREFIX)
-  const legacyMatch = normalized.startsWith(LEGACY_PROGRESS_CODE_PREFIX)
-    ? normalized.slice(LEGACY_PROGRESS_CODE_PREFIX.length).match(/^([123]):(.+)$/)
-    : null
-  if (!isCurrentVersion && !legacyMatch) throw new Error('进度码前缀无效')
-  const version = isCurrentVersion ? 3 : Number(legacyMatch![1])
-  const encoded = isCurrentVersion ? normalized.slice(PROGRESS_CODE_PREFIX.length) : legacyMatch![2]
+  if (!normalized.startsWith(PROGRESS_CODE_PREFIX)) {
+    throw new Error(`同步码必须以 ${PROGRESS_CODE_PREFIX} 开头`)
+  }
+  const encoded = normalized.slice(PROGRESS_CODE_PREFIX.length)
   if (!encoded) throw new Error('进度码版本无效')
   const bytes = fromBase64Url(encoded)
-  const legacyDenseLength =
-    HEADER_BYTES + Math.ceil((QUESTION_COUNT * LEGACY_BITS_PER_QUESTION) / 8)
   const denseLength = HEADER_BYTES + Math.ceil((QUESTION_COUNT * BITS_PER_QUESTION) / 8)
   const states: Array<ProgressState | undefined> = new Array(QUESTION_COUNT)
 
-  if (version === 1) {
-    if (bytes.length !== legacyDenseLength || bytes[0] !== 1)
-      throw new Error('进度码长度或版本无效')
-    for (let index = 0; index < QUESTION_COUNT; index += 1) {
-      const value = readBits(
-        bytes,
-        HEADER_BYTES * 8 + index * LEGACY_BITS_PER_QUESTION,
-        LEGACY_BITS_PER_QUESTION,
-      )
-      if (value) {
-        states[index] = {
-          mastery: value & 7,
-          bookmarked: Boolean(value & (1 << 3)),
-          wrong: Boolean(value & (1 << 4)),
-          attempted: Boolean(value & (1 << 5)),
-        }
-      }
-    }
-  } else if (version === 2) {
-    const count =
-      bytes[0] === 1 && bytes.length >= SPARSE_HEADER_BYTES ? (bytes[4] << 8) | bytes[5] : 0
-    if (bytes[0] === 0) {
-      if (bytes.length !== legacyDenseLength) {
-        throw new Error('进度码长度无效')
-      }
-      for (let index = 0; index < QUESTION_COUNT; index += 1) {
-        const value = readBits(
-          bytes,
-          HEADER_BYTES * 8 + index * LEGACY_BITS_PER_QUESTION,
-          LEGACY_BITS_PER_QUESTION,
-        )
-        if (value) {
-          states[index] = {
-            mastery: value & 7,
-            bookmarked: Boolean(value & 8),
-            wrong: Boolean(value & 16),
-            attempted: Boolean(value & 32),
-          }
-        }
-      }
-    } else if (bytes[0] === 1 && bytes.length === SPARSE_HEADER_BYTES + count * 2) {
-      for (let position = 0; position < count; position += 1) {
-        const packed =
-          (bytes[SPARSE_HEADER_BYTES + position * 2] << 8) |
-          bytes[SPARSE_HEADER_BYTES + position * 2 + 1]
-        const index = packed >> LEGACY_BITS_PER_QUESTION
-        if (index >= QUESTION_COUNT || states[index]) throw new Error('进度码题目索引无效')
-        const value = packed & 0x3f
-        states[index] = {
-          mastery: value & 7,
-          bookmarked: Boolean(value & 8),
-          wrong: Boolean(value & 16),
-          attempted: Boolean(value & 32),
-        }
-      }
-    } else {
-      throw new Error('进度码长度无效')
-    }
-  } else if (bytes[0] === 0) {
+  if (bytes[0] === 0) {
     if (bytes.length !== denseLength) throw new Error('进度码长度无效')
     for (let index = 0; index < QUESTION_COUNT; index += 1) {
       const value = readBits(bytes, HEADER_BYTES * 8 + index * BITS_PER_QUESTION)

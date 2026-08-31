@@ -52,17 +52,16 @@ describe('compact progress code', () => {
     expect(parseProgressCode(code).summary.learnedQuestions).toBe(100)
   })
 
-  it('continues to import version 3 codes using the former progress-code prefix', () => {
-    const currentCode = createProgressCode(fullBackup())
-    const legacyCode = currentCode.replace('DLUTSYNC3:', 'DLUTPROG:3:')
-
-    expect(parseProgressCode(legacyCode).summary.learnedQuestions).toBe(889)
-  })
-
   it('accepts formatting characters commonly inserted by mobile apps', () => {
     const code = createProgressCode(fullBackup())
-    const mobilePaste = `“\uFEFF${code.replace(':', '：').replace(/(.{80})/g, '$1\u200B\n')}”`
+    const mobilePaste = `“\uFEFF\u2067${code.replace(':', '：').replace(/(.{80})/g, '$1\u200B\n')}\u2069”`
 
     expect(parseProgressCode(mobilePaste).summary.learnedQuestions).toBe(889)
+  })
+
+  it('does not redirect a mobile-pasted DLUTSYNC3 code to an obsolete decoder', () => {
+    const code = createProgressCode(fullBackup())
+
+    expect(parseProgressCode(`\u200E${code}\u200F`).summary.learnedQuestions).toBe(889)
   })
 })
