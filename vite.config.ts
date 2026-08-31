@@ -7,6 +7,14 @@ import { resolve } from 'node:path'
 const packageJson = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'))
 const packageVersion = packageJson.version || '0.0.0'
 
+// GitHub Pages serves project sites below /<repository>/. Keep this configurable
+// so a repository rename does not leave production bundles pointing at the old
+// directory (which makes every JS request return 404 and results in a blank page).
+function productionBase(): string {
+  const configured = process.env.VITE_BASE_PATH || '/lhn-quiz/'
+  return `/${configured.replace(/^\/+|\/+$/g, '')}/`
+}
+
 // 把 dist/sw.js 中的 __SW_CACHE_VERSION__ 占位符替换为构建时间戳，
 // 让每次发版 CACHE_NAME 都不同，旧客户端能立即拿到新题库与前端资源。
 function swCacheVersionPlugin(): Plugin {
@@ -30,7 +38,7 @@ function swCacheVersionPlugin(): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [vue(), swCacheVersionPlugin()],
-  base: mode === 'production' ? '/dlut-nihongo-quiz/' : '/',
+  base: mode === 'production' ? productionBase() : '/',
   server: {
     headers: {
       // 防止 IDM 等下载管理器拦截 .gz 字典文件

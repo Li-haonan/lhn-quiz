@@ -4,9 +4,7 @@
 
 ## 线上地址
 
-**https://tianxingleo.top/dlut-nihongo-quiz/**
-
-> 该域名通过 GitHub Pages 的自定义域名配置指向 `tianxingleo.github.io`，仓库 Settings → Pages 中已设置。
+**https://li-haonan.github.io/lhn-quiz/**
 
 ## 工作流
 
@@ -21,31 +19,24 @@
 
 - `npm run build` 先跑 `vue-tsc -b` 做类型检查，再跑 `vite build`
 - 输出到 `dist/`
-- Vite `base` 在 production 下为 `/dlut-nihongo-quiz/`（dev 下为 `/`），见 [`vite.config.ts`](../vite.config.ts)
+- Vite `base` 在 production 下由工作流根据仓库名生成（当前为 `/lhn-quiz/`，dev 下为 `/`），见 [`vite.config.ts`](../vite.config.ts)
 - 路由使用 **hash history**（`/#/quiz`），刷新任意子页面都不会 404 —— 这是为了兼容 GitHub Pages 的静态文件服务
 
 ## 手动触发部署
 
 如果需要在不 push 的情况下重新部署（比如外部依赖更新），可以：
 
-1. 打开 [Actions 页面](https://github.com/tianxingleo/dlut-nihongo-quiz/actions/workflows/deploy.yml)
+1. 打开 [Actions 页面](https://github.com/li-haonan/lhn-quiz/actions/workflows/deploy.yml)
 2. 选择 `Deploy to GitHub Pages` workflow
 3. 点击 `Run workflow` 按钮
 
-## 自定义域名
-
-`tianxingleo.top` 的 DNS 配置：
-
-- A 记录指向 GitHub Pages 的 IP（`185.199.108-111.153`）
-- 仓库根目录**不需要** `CNAME` 文件，因为 Pages 设置里直接配置了自定义域名
-
-如果你 fork 后想用自己的域名，需要在仓库 Settings → Pages 里改，并把 `vite.config.ts` 的 `base` 改成对应的路径。
+仓库再次改名时，部署工作流会自动使用新仓库名作为资源基础路径，无需手动修改 `vite.config.ts`。
 
 ## 本地预览生产构建
 
 ```bash
 npm run build
-npm run preview      # 默认 http://localhost:4173/dlut-nihongo-quiz/
+npm run preview      # 默认 http://localhost:4173/lhn-quiz/
 ```
 
 `preview` 也会带上 production 的 `base`，所以路径和线上一致。

@@ -41,8 +41,8 @@
 
 ```bash
 # 1. Fork & clone
-git clone https://github.com/<your-name>/dlut-nihongo-quiz.git
-cd dlut-nihongo-quiz
+git clone https://github.com/<your-name>/lhn-quiz.git
+cd lhn-quiz
 
 # 2. 安装依赖（需 Node.js 18+，CI 使用 Node 24）
 npm install

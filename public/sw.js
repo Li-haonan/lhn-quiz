@@ -1,5 +1,5 @@
 // Service Worker 自动适应部署路径：所有路径基于 self.registration.scope 计算，
-// 项目部署在 /dlut-nihongo-quiz/ 子路径下也能正常注册和缓存。
+// 项目改名或部署在任意子路径下也能正常注册和缓存。
 // CACHE_VERSION 由构建脚本写回（见 scripts/bump-sw-cache.mjs），每次发版自动 bump。
 const CACHE_VERSION = '__SW_CACHE_VERSION__'
 const CACHE_NAME = `quiz-cache-${CACHE_VERSION}`
