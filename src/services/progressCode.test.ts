@@ -59,6 +59,14 @@ describe('compact progress code', () => {
     expect(parseProgressCode(mobilePaste).summary.learnedQuestions).toBe(889)
   })
 
+  it('accepts a lowercase or mixed-case prefix without changing the encoded payload', () => {
+    const code = createProgressCode(fullBackup())
+    const payload = code.slice('DLUTSYNC3:'.length)
+
+    expect(parseProgressCode(`dlutsync3:${payload}`).summary.learnedQuestions).toBe(889)
+    expect(parseProgressCode(`DlutSync3:${payload}`).summary.learnedQuestions).toBe(889)
+  })
+
   it('does not redirect a mobile-pasted DLUTSYNC3 code to an obsolete decoder', () => {
     const code = createProgressCode(fullBackup())
 

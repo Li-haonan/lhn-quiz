@@ -335,7 +335,9 @@ const totalCount = computed(() => Object.values(counts.value).reduce((a, b) => a
             <button class="modal-close" aria-label="关闭" @click="closeSyncImport">×</button>
           </div>
           <template v-if="!syncSummary">
-            <label for="sync-code" class="sync-label">粘贴以 DLUTSYNC3: 开头的同步码</label>
+            <label for="sync-code" class="sync-label"
+              >粘贴以 DLUTSYNC3: 开头的同步码（不区分大小写）</label
+            >
             <textarea
               id="sync-code"
               v-model="syncCodeInput"

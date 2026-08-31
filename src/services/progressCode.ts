@@ -142,15 +142,20 @@ function fromBase64Url(value: string): Uint8Array {
  * validating the URL-safe payload.
  */
 export function normalizeProgressCode(code: string): string {
-  return (
-    code
-      .trim()
-      .replace(/^["'“”‘’]+|["'“”‘’]+$/g, '')
-      // \p{Cf} also covers bidi marks/isolate characters added by some mobile
-      // messaging apps, not only the common zero-width characters listed before.
-      .replace(/[\s\p{Cf}]/gu, '')
-      .replace(/：/g, ':')
-  )
+  const normalized = code
+    .trim()
+    .replace(/^["'“”‘’]+|["'“”‘’]+$/g, '')
+    // \p{Cf} also covers bidi marks/isolate characters added by some mobile
+    // messaging apps, not only the common zero-width characters listed before.
+    .replace(/[\s\p{Cf}]/gu, '')
+    .replace(/：/g, ':')
+
+  // The fixed, human-readable prefix carries no encoded data, so accept it in
+  // any letter case while leaving the case-sensitive Base64URL payload intact.
+  if (normalized.slice(0, PROGRESS_CODE_PREFIX.length).toUpperCase() === PROGRESS_CODE_PREFIX) {
+    return PROGRESS_CODE_PREFIX + normalized.slice(PROGRESS_CODE_PREFIX.length)
+  }
+  return normalized
 }
 
 /**
@@ -213,7 +218,7 @@ export function createProgressCode(backupJson: string): string {
 export function parseProgressCode(code: string): { json: string; summary: SyncSummary } {
   const normalized = normalizeProgressCode(code)
   if (!normalized.startsWith(PROGRESS_CODE_PREFIX)) {
-    throw new Error(`同步码必须以 ${PROGRESS_CODE_PREFIX} 开头`)
+    throw new Error(`同步码需以 ${PROGRESS_CODE_PREFIX} 开头（不区分大小写）`)
   }
   const encoded = normalized.slice(PROGRESS_CODE_PREFIX.length)
   if (!encoded) throw new Error('进度码版本无效')
