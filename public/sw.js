@@ -67,7 +67,10 @@ self.addEventListener('fetch', (event) => {
   // deployed application shell instead of rendering the previous cached UI.
   if (isDocument) {
     event.respondWith(
-      fetch(event.request)
+      // Bypass the browser HTTP cache as well as Cache Storage. In particular,
+      // mobile browsers can otherwise keep serving an old index.html after a
+      // Pages deployment even though this worker uses a network-first strategy.
+      fetch(event.request, { cache: 'no-store' })
         .then((response) => {
           if (response && response.ok && response.type === 'basic') {
             const clone = response.clone()
@@ -84,17 +87,41 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  if (isQuizBank || isAsset) {
+  if (isAsset) {
     event.respondWith(
-      caches.match(event.request).then((cached) => {
-        const network = fetch(event.request).then((response) => {
+      caches.match(event.request).then(async (cached) => {
+        // Application assets are network-first too. This is deliberately more
+        // conservative than stale-while-revalidate: a previously cached JS
+        // bundle must never keep an obsolete sync-code implementation alive.
+        try {
+          const response = await fetch(event.request, { cache: 'no-store' })
           if (response && response.ok && response.type === 'basic') {
             const clone = response.clone()
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
           }
           return response
-        }).catch(() => cached)
-        return cached || network
+        } catch {
+          return cached || Response.error()
+        }
+      }),
+    )
+    return
+  }
+
+  // Large question banks remain cache-first so mobile users do not repeatedly
+  // download several megabytes. Their URLs/data are independent of app code.
+  if (isQuizBank) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached
+        return fetch(event.request)
+          .then((response) => {
+            if (response && response.ok && response.type === 'basic') {
+              const clone = response.clone()
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+            }
+            return response
+          })
       }),
     )
   }
