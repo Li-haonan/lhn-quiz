@@ -1,4 +1,4 @@
-# Robots.txt for DLUT 期末复习平台
+# Robots.txt for 个人知识题库
 # https://tianxingleo.top/dlut-nihongo-quiz/
 
 User-agent: *

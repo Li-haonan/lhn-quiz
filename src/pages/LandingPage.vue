@@ -90,10 +90,10 @@ const subjects = computed(() =>
     <!-- Hero -->
     <section class="hero">
       <h1 class="hero-title stagger-2">个人题库</h1>
-      <p class="hero-sub stagger-3">2026年南京市职工技能大赛 · 电力行业人工智能业务理论题库</p>
+      <p class="hero-sub stagger-3">把学习内容沉淀成自己的知识题库</p>
       <p class="hero-desc stagger-4">
-        覆盖 {{ totalQuestions.toLocaleString() }} 道题目，内置智能错题本、掌握度追踪、薄弱点分析。
-        键盘驱动，高效刷题。
+        当前收录 {{ totalQuestions.toLocaleString() }} 道题目，未来将持续加入更多课程与知识主题。
+        内置智能错题本、掌握度追踪与薄弱点分析。
       </p>
       <div class="hero-actions stagger-5">
         <button class="btn btn-accent btn-lg" @click="quickStart">开始复习</button>
@@ -109,8 +109,8 @@ const subjects = computed(() =>
       </div>
       <div class="strip-divider" />
       <div class="strip-item">
-        <span class="strip-num">1</span>
-        <span class="strip-label">专属题库</span>
+        <span class="strip-num">持续</span>
+        <span class="strip-label">扩展内容</span>
       </div>
       <div class="strip-divider" />
       <div class="strip-item">
@@ -190,7 +190,7 @@ const subjects = computed(() =>
     <!-- Footer CTA -->
     <section class="cta">
       <h2>准备好了吗？</h2>
-      <p>进入电力行业人工智能业务理论题库，开始高效刷题。</p>
+      <p>从当前题库开始练习，逐步建立属于自己的长期知识库。</p>
       <button class="btn btn-accent btn-lg" @click="quickStart">进入仪表盘</button>
     </section>
   </div>

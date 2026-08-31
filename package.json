@@ -1,25 +1,16 @@
 {
-  "name": "dlut-nihongo-quiz",
+  "name": "personal-knowledge-quiz",
   "version": "0.4.0",
-  "description": "2026年南京市职工技能大赛电力行业人工智能业务理论在线刷题工具",
-  "author": "tianxingleo",
+  "description": "本地优先、持续扩展的个人知识题库与复习平台",
   "license": "Apache-2.0",
   "type": "module",
-  "homepage": "https://tianxingleo.top/dlut-nihongo-quiz/",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/tianxingleo/dlut-nihongo-quiz.git"
-  },
-  "bugs": {
-    "url": "https://github.com/tianxingleo/dlut-nihongo-quiz/issues"
-  },
   "keywords": [
-    "japanese",
+    "knowledge-base",
     "quiz",
+    "personal-learning",
+    "local-first",
     "vue",
     "vite",
-    "dlut",
-    "minna-no-nihongo",
     "education",
     "review"
   ],
