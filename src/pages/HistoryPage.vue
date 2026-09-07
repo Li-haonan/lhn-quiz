@@ -7,6 +7,7 @@ import { useActiveCategory, loadActiveCategory } from '../services/categoryStore
 import { useHiddenSite } from '../composables/useHiddenSite'
 import { truncate } from '../utils/text'
 import { stripMarkdown } from '../utils/renderMarkdown'
+import { CATEGORIES } from '../config/categories'
 import type { Attempt, Category } from '../types/question'
 
 const router = useRouter()
@@ -78,6 +79,7 @@ watch([activeCategory, isUnlocked], () => {
 
 watch([filterCategory, filterDateRange, filterResult], () => {
   currentPage.value = 1
+  refreshList()
 })
 
 const totalPages = computed(() => Math.ceil(attempts.value.length / pageSize.value))
@@ -146,7 +148,9 @@ function goReview(questionId: string) {
         <div class="filters">
           <select v-model="filterCategory" class="filter-select" aria-label="按题库筛选">
             <option value="all">全部题目</option>
-            <option value="power-ai">电力人工智能</option>
+            <option v-for="category in CATEGORIES" :key="category.key" :value="category.key">
+              {{ category.short }}
+            </option>
           </select>
           <select v-model="filterDateRange" class="filter-select" aria-label="按时间范围筛选">
             <option value="all">全部时间</option>
