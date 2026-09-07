@@ -17,6 +17,7 @@ const wrongItems = ref<{ questionId: string; stats: QuestionStats; stem: string;
   [],
 )
 const filter = ref<'all' | 'recent' | 'most-wrong'>('all')
+const selectedIds = ref<Set<string>>(new Set())
 const currentPage = ref(1)
 const pageSize = ref(20)
 const confirmingId = ref<string | null>(null)
@@ -40,6 +41,8 @@ async function refreshList() {
         group: q?.groupTitle || '',
       }
     })
+    const availableIds = new Set(wrongItems.value.map((item) => item.questionId))
+    selectedIds.value = new Set([...selectedIds.value].filter((id) => availableIds.has(id)))
   } catch (e) {
     error.value = e instanceof Error ? e.message : '加载错题数据失败，请刷新页面重试'
   } finally {
@@ -74,8 +77,42 @@ const filteredItems = computed(() => {
       (a, b) =>
         new Date(b.stats.lastAttemptAt).getTime() - new Date(a.stats.lastAttemptAt).getTime(),
     )
+  if (filter.value !== 'all') items = items.slice(0, 20)
   return items
 })
+
+const reviewButtonLabel = computed(() => {
+  if (filter.value === 'recent') return '一键刷最近错题'
+  if (filter.value === 'most-wrong') return '一键刷高频错题'
+  return '一键重刷全部错题'
+})
+
+const allPageSelected = computed(
+  () =>
+    pagedItems.value.length > 0 &&
+    pagedItems.value.every((item) => selectedIds.value.has(item.questionId)),
+)
+
+function toggleSelected(questionId: string) {
+  const next = new Set(selectedIds.value)
+  if (next.has(questionId)) next.delete(questionId)
+  else next.add(questionId)
+  selectedIds.value = next
+}
+
+function togglePageSelection() {
+  const next = new Set(selectedIds.value)
+  const shouldSelect = !allPageSelected.value
+  pagedItems.value.forEach((item) => {
+    if (shouldSelect) next.add(item.questionId)
+    else next.delete(item.questionId)
+  })
+  selectedIds.value = next
+}
+
+function reviewSelected() {
+  goReview([...selectedIds.value])
+}
 
 const totalPages = computed(() => Math.ceil(filteredItems.value.length / pageSize.value))
 
@@ -128,18 +165,42 @@ function handleClearWrong(questionId: string) {
             最多错
           </button>
         </div>
-        <button
-          class="btn btn-accent"
-          @click="goReview(filteredItems.map((i) => i.questionId))"
-          :disabled="filteredItems.length === 0"
-        >
-          一键重刷全部错题
-        </button>
+        <div class="review-actions">
+          <button
+            class="btn btn-outline"
+            @click="reviewSelected"
+            :disabled="selectedIds.size === 0"
+          >
+            刷选中题目（{{ selectedIds.size }}）
+          </button>
+          <button
+            class="btn btn-accent"
+            @click="goReview(filteredItems.map((i) => i.questionId))"
+            :disabled="filteredItems.length === 0"
+          >
+            {{ reviewButtonLabel }}（{{ filteredItems.length }}）
+          </button>
+        </div>
+      </div>
+
+      <div v-if="filteredItems.length > 0" class="selection-bar">
+        <label>
+          <input type="checkbox" :checked="allPageSelected" @change="togglePageSelection" />
+          选择本页
+        </label>
+        <span>勾选任意错题，自定义本次刷题内容</span>
       </div>
 
       <div v-if="filteredItems.length === 0" class="empty">暂无错题，继续保持</div>
       <div v-else class="wrong-list">
         <div v-for="item in pagedItems" :key="item.questionId" class="wrong-item">
+          <input
+            class="question-checkbox"
+            type="checkbox"
+            :checked="selectedIds.has(item.questionId)"
+            :aria-label="`选择题目 ${item.questionId}`"
+            @change="toggleSelected(item.questionId)"
+          />
           <div class="wi-main">
             <span class="wi-id">{{ item.questionId }}</span>
             <span class="wi-stem">{{ truncate(stripMarkdown(item.stem), 50) }}</span>
@@ -236,6 +297,36 @@ h1 {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
+}
+.review-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.selection-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.selection-bar label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.question-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex: 0 0 auto;
 }
 
 .empty {
