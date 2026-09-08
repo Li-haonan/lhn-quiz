@@ -71,11 +71,12 @@ export function validateEssayGrade(
     }
   })
   const pointTotal = normalizedPoints.reduce((sum, point) => sum + point.score, 0)
-  if (Math.abs(pointTotal - score) > 0.11) throw new Error('AI 总分与分项得分不一致')
   const strings = (key: string) =>
     Array.isArray(raw[key]) ? (raw[key] as unknown[]).map((item) => String(item)) : []
   return {
-    score: Math.round(score * 10) / 10,
+    // 分项评分包含更完整、可复核的评分依据。模型偶尔会算错总和，因此以分项之和
+    // 作为最终总分，避免一份其他字段均有效的评分结果因算术错误而无法展示。
+    score: Math.round(pointTotal * 10) / 10,
     max_score: question.max_score,
     point_grades: normalizedPoints,
     hit_points: strings('hit_points'),

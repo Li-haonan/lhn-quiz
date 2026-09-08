@@ -61,19 +61,19 @@ describe('validateEssayGrade', () => {
     ).toThrow(/逐项完成评分/)
   })
 
-  it('rejects a total that differs from rubric scores', () => {
-    expect(() =>
-      validateEssayGrade(
-        {
-          score: 9,
-          point_grades: [
-            { status: 'full', score: 5, max_score: 5, evidence: '证据', reason: '完整' },
-            { status: 'partial', score: 2, max_score: 5, evidence: '证据', reason: '部分' },
-          ],
-        },
-        question,
-        'test-model',
-      ),
-    ).toThrow(/分项得分不一致/)
+  it('uses the rubric score sum when the AI total is inconsistent', () => {
+    const result = validateEssayGrade(
+      {
+        score: 9,
+        point_grades: [
+          { status: 'full', score: 5, max_score: 5, evidence: '证据', reason: '完整' },
+          { status: 'partial', score: 2, max_score: 5, evidence: '证据', reason: '部分' },
+        ],
+      },
+      question,
+      'test-model',
+    )
+
+    expect(result.score).toBe(7)
   })
 })
