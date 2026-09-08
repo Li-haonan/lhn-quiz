@@ -30,6 +30,7 @@ const navLinks = [
   { to: '/', label: '首页' },
   { to: '/home', label: '仪表盘' },
   { to: '/quiz', label: '刷题' },
+  { to: '/essay', label: '论述题' },
   { to: '/wrong', label: '错题本' },
   { to: '/bookmarks', label: '收藏' },
   { to: '/history', label: '历史' },
