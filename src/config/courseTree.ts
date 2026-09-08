@@ -21,6 +21,13 @@ export const COURSE_TREE: TreeNode[] = [
     subBank: null,
     icon: '电',
   },
+  {
+    type: 'leaf',
+    key: 'power-ai-essay',
+    label: '电力人工智能 · 论述题',
+    icon: '述',
+    route: '/essay',
+  },
 ]
 
 export function findLeafByKey(key: string): TreeNode | undefined {

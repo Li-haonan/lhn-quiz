@@ -2,6 +2,7 @@ import Dexie, { type Table } from 'dexie'
 import { INTERVAL_DAYS } from '../constants'
 import type { Attempt, QuestionStats, TagStats, Session } from '../types/question'
 import type { SettingsMap, SettingsKey } from '../types/settings'
+import type { EssayAttempt, EssayQuestionStats } from '../types/essay'
 
 export function createDefaultStats(
   questionId: string,
@@ -28,6 +29,8 @@ export class QuizDatabase extends Dexie {
   tagStats!: Table<TagStats>
   sessions!: Table<Session, number>
   settings!: Table<{ key: string; value: string }, string>
+  essayAttempts!: Table<EssayAttempt, number>
+  essayQuestionStats!: Table<EssayQuestionStats, number>
 
   constructor() {
     super('JapaneseQuizDB')
@@ -68,6 +71,16 @@ export class QuizDatabase extends Dexie {
           }
         })
       })
+    // Version 4: 论述题作答、AI 评分与掌握度
+    this.version(4).stores({
+      attempts: '++id, questionId, sessionId, isCorrect, createdAt, mode, category',
+      questionStats: 'questionId, masteryLevel, reviewDueAt, isBookmarked',
+      tagStats: 'tag, correctCount, wrongCount',
+      sessions: '++id, mode, startedAt',
+      settings: 'key',
+      essayAttempts: '++id, questionId, score, createdAt, mode',
+      essayQuestionStats: 'questionId, bestScore, lastScore, masteryStatus, lastAttemptAt',
+    })
   }
 }
 
@@ -204,13 +217,29 @@ export async function exportData(): Promise<string> {
   const parts: string[] = []
   const push = (s: string) => parts.push(s)
 
-  push('{"version":2')
+  push('{"version":3')
   push(`,"exportedAt":"${new Date().toISOString()}"`)
 
   // attempts 流式处理
   push(',"attempts":[')
   let first = true
   await db.attempts.each((item) => {
+    push(first ? JSON.stringify(item) : ',' + JSON.stringify(item))
+    first = false
+  })
+  push(']')
+
+  push(',"essayAttempts":[')
+  first = true
+  await db.essayAttempts.each((item) => {
+    push(first ? JSON.stringify(item) : ',' + JSON.stringify(item))
+    first = false
+  })
+  push(']')
+
+  push(',"essayQuestionStats":[')
+  first = true
+  await db.essayQuestionStats.each((item) => {
     push(first ? JSON.stringify(item) : ',' + JSON.stringify(item))
     first = false
   })
@@ -271,7 +300,15 @@ export async function importData(json: string, options: { merge?: boolean } = {}
     throw new Error('备份格式错误：缺少 version 字段')
   }
   // 已知表名 → 必须是数组（如果存在）。任何未知顶层字段直接忽略。
-  const tableKeys = ['attempts', 'questionStats', 'tagStats', 'sessions', 'settings'] as const
+  const tableKeys = [
+    'attempts',
+    'questionStats',
+    'tagStats',
+    'sessions',
+    'settings',
+    'essayAttempts',
+    'essayQuestionStats',
+  ] as const
   for (const k of tableKeys) {
     if (k in obj && !Array.isArray(obj[k])) {
       throw new Error(`备份格式错误：${k} 应为数组`)
@@ -381,6 +418,12 @@ async function doMergeImport(data: Record<string, unknown>): Promise<void> {
     if (data.settings) {
       await db.settings.bulkPut(data.settings as { key: string; value: string }[])
     }
+    if (data.essayAttempts) {
+      await db.essayAttempts.bulkAdd(data.essayAttempts as EssayAttempt[])
+    }
+    if (data.essayQuestionStats) {
+      await db.essayQuestionStats.bulkPut(data.essayQuestionStats as EssayQuestionStats[])
+    }
   })
 }
 
@@ -406,6 +449,14 @@ async function doImportTables(data: Record<string, unknown>): Promise<void> {
     if (data.settings) {
       await db.settings.clear()
       await db.settings.bulkPut(data.settings as { key: string; value: string }[])
+    }
+    await db.essayAttempts.clear()
+    if (data.essayAttempts) {
+      await db.essayAttempts.bulkAdd(data.essayAttempts as EssayAttempt[])
+    }
+    await db.essayQuestionStats.clear()
+    if (data.essayQuestionStats) {
+      await db.essayQuestionStats.bulkPut(data.essayQuestionStats as EssayQuestionStats[])
     }
   })
 }
